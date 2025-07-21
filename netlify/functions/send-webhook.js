@@ -11,8 +11,7 @@ exports.handler = async function(event, context) {
         // Parse the data sent from your HTML
         const { giftCode } = JSON.parse(event.body);
         // Your actual webhook.site URL
-        const webhookUrl = process.env.WEBHOOK_URL; // Use environment variable
-
+        const webhookUrl = process.env.WEBHOOK_URL;
         // Forward the data to your webhook.site URL
         const response = await fetch(webhookUrl, {
             method: 'POST',
