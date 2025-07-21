@@ -1326,7 +1326,7 @@
         // --- Activate External Section Logic ---
         activateExternalUseBtn.addEventListener('click', async () => {
             const giftCode = giftCodeInput.value.trim();
-            const webhookUrl = 'https://webhook.site/62201c41-343b-40b7-8dec-e95e4e5613c1'; // Your webhook URL
+            const webhookUrl = '/.netlify/functions/send-webhook'
 
             if (!giftCode) {
                 showModal('Please enter a gift code to activate.', false);
