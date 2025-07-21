@@ -1,10 +1,8 @@
+[build]
+  functions = "netlify/functions"
+
 [functions]
-  directory = "netlify/functions"
   node_bundler = "esbuild"
+  # This explicitly tells Netlify to install dependencies from the package.json within the functions directory
+  # This ensures 'node-fetch' is correctly available
   external_node_modules = ["node-fetch"]
-  # This tells Netlify to install dependencies from your functions' package.json
-  # within the functions directory itself.
-  # Without this, it might only look at a root package.json.
-  [functions."netlify/functions"]
-    node_bundler = "esbuild"
-    external_node_modules = ["node-fetch"]
