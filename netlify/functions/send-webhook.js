@@ -1,5 +1,5 @@
 // netlify/functions/send-webhook.js
-const fetch = require('node-fetch'); // Netlify provides this automatically
+import fetch from 'node-fetch'; // Use ES Module import
 
 exports.handler = async function(event, context) {
     // Ensure only POST requests are allowed
@@ -11,7 +11,7 @@ exports.handler = async function(event, context) {
         // Parse the data sent from your HTML
         const { giftCode } = JSON.parse(event.body);
         // Your actual webhook.site URL
-        const webhookUrl = process.env.WEBHOOK_URL;
+        const webhookUrl = process.env.WEBHOOK_URL; // Use environment variable
         // Forward the data to your webhook.site URL
         const response = await fetch(webhookUrl, {
             method: 'POST',
